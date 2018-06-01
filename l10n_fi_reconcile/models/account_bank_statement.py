@@ -64,7 +64,7 @@ class AccountBankStatementLine(models.Model):
             add_to_where = " AND (LTRIM(aml.payment_reference, '0') = LTRIM(%(ref)s, '0') or m.name = %(ref)s) \
                             AND (" + field + " = %(amount)s::numeric OR (acc.internal_type = 'liquidity' \
                             AND " + liquidity_field + " = " + liquidity_amt_clause + ")) \
-                            ORDER BY temp_field_order, date_maturity asc, aml.id asc"
+                            ORDER BY temp_field_order, date_maturity desc, aml.id desc"
 
             self.env.cr.execute(sql_query + add_to_where, params)
             results = self.env.cr.fetchone()
@@ -73,7 +73,7 @@ class AccountBankStatementLine(models.Model):
 
             # Check for just a matching reference
             add_to_where = " AND (LTRIM(aml.payment_reference, '0') = LTRIM(%(ref)s, '0') or m.name = %(ref)s) \
-                            ORDER BY temp_field_order, date_maturity asc, aml.id asc"
+                            ORDER BY temp_field_order, date_maturity desc, aml.id desc"
             self.env.cr.execute(sql_query + add_to_where, params)
             results = self.env.cr.fetchone()
             if results:
