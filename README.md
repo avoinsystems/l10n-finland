@@ -9,7 +9,7 @@ Finnish localisation
 
 
 Translation Status
-2------------------
+------------------
 [![Transifex Status](https://www.transifex.com/projects/p/OCA-l10n-finland-11-0/chart/image_png)](https://www.transifex.com/projects/p/OCA-l10n-finland-11-0)
 
 
