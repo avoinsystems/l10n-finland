@@ -2,7 +2,7 @@
 
 <templates xml:space="preserve">
 
-    <t t-extend="bank_statement_reconciliation_line">
+    <t t-extend="reconciliation.line">
         <t t-jquery=".cell_label" t-operation="before">
             <td>
                 <t t-if="line.ref" t-esc="line.ref"/>
@@ -18,20 +18,20 @@
         </t>
     </t>
 
-    <t t-extend="reconciliation_line_open_balance">
+    <t t-extend="reconciliation.line.balance">
         <t t-jquery=".cell_label" t-operation="before">
             <td />
             <td />
         </t>
     </t>
 
-    <t t-extend="reconciliation_move_line">
+    <t t-extend="reconciliation.line.mv_line">
         <t t-jquery=".cell_label" t-operation="before">
             <td>
                 <t t-if="line.payment_reference" t-esc="line.payment_reference"/>
             </td>
         </t>
-        <t t-jquery=".cell_debit" t-operation="before">
+        <t t-jquery=".cell_left" t-operation="before">
             <td />
         </t>
     </t>
