@@ -25,7 +25,6 @@ class ResPartner(models.Model):
     def _check_if_single_business_id(self):
         business_category_id = self.env.ref('l10n_fi_business_code.res_partner_id_category_business_id')
         for partner in self:
-            limit = 1
             id_numbers = partner.id_numbers.filtered(lambda r: r.category_id == business_category_id)
-            if len(id_numbers) > limit:
-                raise ValidationError('Partner can only have ID number of category ' + business_category_id.name)
+            if len(id_numbers) > 1:
+                raise ValidationError('Partner can only have 1 ID number of category ' + business_category_id.name)
