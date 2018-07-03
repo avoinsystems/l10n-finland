@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ##############################################################################
 #
 #    Author: Oy Tawasta OS Technologies Ltd.
@@ -26,7 +25,7 @@
     "author": "Oy Tawasta Technologies Ltd., Odoo Community Association (OCA)",
     "license": "AGPL-3",
     "application": False,
-    "installable": False,
+    "installable": True,
     "external_dependencies": {
         "python": [],
         "bin": [],
