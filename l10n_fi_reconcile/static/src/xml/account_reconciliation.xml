@@ -5,7 +5,7 @@
     <t t-extend="reconciliation.line">
         <t t-jquery=".cell_label" t-operation="before">
             <td>
-                <t t-if="line.ref" t-esc="line.ref"/>
+                <t t-if="state.st_line.ref" t-esc="state.st_line.ref"/>
             </td>
             <!-- partner_note is not a field on account.bank.statement.line that actually
                  exists by that name. This Qweb doesn't actually access the record's fields
@@ -13,7 +13,7 @@
                  that both would've required the use of partner_name-key so we named one of them partner_note.
                  partner_note contains the value of account.bank.statement's partner_name. -->
             <td>
-                <t t-if="line.partner_note" t-esc="line.partner_note" />
+                <t t-if="state.st_line.partner_note" t-esc="state.st_line.partner_note" />
             </td>
         </t>
     </t>
