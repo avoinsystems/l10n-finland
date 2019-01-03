@@ -31,7 +31,7 @@
         "bin": [],
     },
     "depends": [
-        "crm",
+        "base",
     ],
     "data": [
         'data/res_partner_operator_einvoice.xml',
