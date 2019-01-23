@@ -2,7 +2,7 @@
 ##############################################################################
 #
 #    Author: Avoin.Systems.
-#    Copyright 2017 Avoin.Systems.
+#    Copyright 2019 Avoin.Systems.
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -18,29 +18,18 @@
 #    along with this program. If not, see http://www.gnu.org/licenses/agpl.html
 #
 ##############################################################################
-# noinspection PyStatementEffect
-{
-    'name': "Finnish Reconciliation",
-    'summary': "Finnish bank statement reconciliation extensions",
-    'version': '10.0.0.1.0',
-    'category': 'Invoicing & Payments',
-    'website': "https://avoin.systems",
-    'author': "Avoin.Systems",
-    'license': 'AGPL-3',
-    'application': False,
-    'installable': True,
-    'depends': [
-        'l10n_fi',
-        'l10n_fi_payment_reference',
-    ],
-    'data': [
-        "views/account_view.xml",
-        "views/res_config_view.xml",
-    ],
-    'demo': [
 
-    ],
-    'qweb': [
-        'static/src/xml/account_reconciliation.xml',
-    ],
-}
+from odoo import fields, models
+
+
+class ResCompany(models.Model):
+    _inherit = 'res.company'
+
+    auto_reconcile_method = fields.Selection(
+        [
+            ('odoo', "Odoo's default method"),
+            ('finnish', 'Payment reference'),
+        ],
+        default='finnish',
+        required=True,
+    )
