@@ -78,7 +78,8 @@ class AccountBankStatementLine(models.Model):
                       self.journal_id.default_credit_account_id.id, self.journal_id.default_debit_account_id.id),
                   'amount': float_round(amount, precision_digits=precision),
                   'partner_id': self.partner_id.id,
-                  'ref': self.name,
+                  'ref': self.ref,
+                  'name': self.name,  # Some parsers put payment reference here
                   }
         field = currency and 'amount_residual_currency' or 'amount_residual'
         liquidity_field = currency and 'amount_currency' or amount > 0 and 'debit' or 'credit'
@@ -108,7 +109,7 @@ class AccountBankStatementLine(models.Model):
         # DIFF: Look for structured communication match, overlook partner
         if self.name:
             sql_query = self._get_common_sql_query(overlook_partner=True) + \
-                        " AND aml.ref = %(ref)s AND (" + field + \
+                        " AND (aml.ref = %(ref)s OR aml.ref = %(name)s) AND (" + field + \
                         " = %(amount)s OR (acc.internal_type = 'liquidity' AND " + liquidity_field + \
                         " = %(amount)s)) ORDER BY date_maturity asc, aml.id asc"
             self.env.cr.execute(sql_query, params)
@@ -120,7 +121,7 @@ class AccountBankStatementLine(models.Model):
         if self.name and not match_recs:
             # sql_query = self._get_common_sql_query() + " AND aml.payment_reference = %(ref)s"
             sql_query = self._get_common_sql_query(overlook_partner=True) + \
-                        " AND aml.payment_reference = %(ref)s AND (" + field + \
+                        " AND (aml.payment_reference = %(ref)s OR aml.payment_reference = %(name)s) AND (" + field + \
                         " = %(amount)s OR (acc.internal_type = 'liquidity' AND " + liquidity_field + \
                         " = %(amount)s)) ORDER BY date_maturity asc, aml.id asc"
             self.env.cr.execute(sql_query, params)
