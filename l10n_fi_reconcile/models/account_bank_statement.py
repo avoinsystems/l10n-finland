@@ -38,6 +38,11 @@ class AccountBankStatementLine(models.Model):
     def _get_auto_reconcile_queries(self):
         sql_queries = list()
         params = self._get_auto_reconcile_params()
+
+        # If no reference is present, return empty list
+        if not params['ref']:
+            return sql_queries
+
         amount_field = params['currency'] and 'amount_residual_currency' or \
             'amount_residual'
         liquidity_field = params['currency'] and 'amount_currency' or \
@@ -79,8 +84,7 @@ class AccountBankStatementLine(models.Model):
                       self.journal_id.default_debit_account_id.id),
                   'amount': float_round(amount, precision_digits=precision),
                   'partner_id': self.partner_id.id,
-                  'ref': self.ref,
-                  'name': self.name,  # Some parsers put payment reference here
+                  'ref': self.ref or self.name,
                   'currency': currency,
                   }
         return params
