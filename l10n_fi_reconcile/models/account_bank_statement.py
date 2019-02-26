@@ -2,7 +2,7 @@
 ##############################################################################
 #
 #    Author: Avoin.Systems.
-#    Copyright 2017 Avoin.Systems.
+#    Copyright 2019 Avoin.Systems.
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -28,49 +28,77 @@ from odoo.tools import float_round
 _logger = logging.getLogger(__name__)
 
 
-class AccountBankStatement(models.Model):
-    _inherit = 'account.bank.statement'
-
-
 class AccountBankStatementLine(models.Model):
     _inherit = 'account.bank.statement.line'
 
-    def _get_auto_reconcile_queries(self):
+    def _get_auto_reconcile_queries(self, params, match_amount=True):
         sql_queries = list()
-        params = self._get_auto_reconcile_params()
 
         # If no reference is present, return empty list
         if not params['ref']:
             return sql_queries
 
-        amount_field = params['currency'] and 'amount_residual_currency' or \
-            'amount_residual'
-        liquidity_field = params['currency'] and 'amount_currency' or \
-            params['amount'] > 0 and 'debit' or 'credit'
+        if match_amount:
+            amount_sql = "AND ({amount}  = %(amount)s " \
+                         "OR (acc.internal_type = 'liquidity' " \
+                         "AND {liquidity} = %(amount)s)) " \
+                .format(
+                    amount=params['amount_field'],
+                    liquidity=params['liquidity_field'])
+        else:
+            amount_sql = ''
 
         # Look for structured communication match
         sql_queries.append(
             self._get_common_sql_query() +
             " AND (aml.ref = %(ref)s OR aml.payment_reference = %(ref)s) "
-            "AND ({amount}  = %(amount)s OR (acc.internal_type = 'liquidity' "
-            "AND {liquidity} = %(amount)s)) "
-            "ORDER BY date_maturity asc, aml.id asc".format(
-                amount=amount_field, liquidity=liquidity_field)
+            "{amount_sql} ORDER BY date_maturity asc, aml.id asc".format(
+                amount_sql=amount_sql)
         )
 
         # Look for structured communication match, overlook partner
         sql_queries.append(
             self._get_common_sql_query(overlook_partner=True) +
             " AND (aml.ref = %(ref)s OR aml.payment_reference = %(ref)s) "
-            "AND ({amount}  = %(amount)s OR (acc.internal_type = 'liquidity' "
-            "AND {liquidity} = %(amount)s)) "
-            "ORDER BY date_maturity asc, aml.id asc".format(
-                amount=amount_field, liquidity=liquidity_field)
+            "{amount_sql} ORDER BY date_maturity asc, aml.id asc".format(
+                amount_sql=amount_sql)
+        )
+
+        if not params['ref_pattern']:
+            return sql_queries
+
+        # The payment reference on invoice may contain different number
+        # of leading zeros. Use pattern matching.
+        
+        # Look for structured communication match, padded ref
+        sql_queries.append(
+            self._get_common_sql_query() +
+            " AND (aml.ref SIMILAR TO %(ref_pattern)s "
+            "OR aml.payment_reference SIMILAR TO %(ref_pattern)s) "
+            "{amount_sql} ORDER BY date_maturity asc, aml.id asc".format(
+                amount_sql=amount_sql)
+        )
+
+        # Look for structured communication match, padded ref, overlook partner
+        sql_queries.append(
+            self._get_common_sql_query(overlook_partner=True) +
+            " AND (aml.ref SIMILAR TO %(ref_pattern)s "
+            "OR aml.payment_reference SIMILAR TO %(ref_pattern)s) "
+            "{amount_sql} ORDER BY date_maturity asc, aml.id asc".format(
+                amount_sql=amount_sql)
         )
 
         return sql_queries
 
     def _get_auto_reconcile_params(self):
+        
+        def get_ref_pattern(ref):
+            # The payment reference on invoice may contain different number
+            # of leading zeros. Use pattern matching.
+            if ref and ref.startswith('0'):
+                return '0*' + ref.lstrip('0')
+            return False
+        
         amount = self.amount_currency or self.amount
         company_currency = self.journal_id.company_id.currency_id
         st_line_currency = self.currency_id or self.journal_id.currency_id
@@ -78,6 +106,10 @@ class AccountBankStatementLine(models.Model):
                     company_currency.decimal_places
         currency = (st_line_currency and st_line_currency !=
                     company_currency) and st_line_currency.id or False
+        amount_field = currency and 'amount_residual_currency' or \
+                       'amount_residual'
+        liquidity_field = currency and 'amount_currency' or \
+                          amount > 0 and 'debit' or 'credit'
         params = {'company_id': self.env.user.company_id.id,
                   'account_payable_receivable': (
                       self.journal_id.default_credit_account_id.id,
@@ -85,9 +117,25 @@ class AccountBankStatementLine(models.Model):
                   'amount': float_round(amount, precision_digits=precision),
                   'partner_id': self.partner_id.id,
                   'ref': self.ref or self.name,
+                  'ref_pattern': get_ref_pattern(self.ref),
                   'currency': currency,
+                  'amount_field': amount_field,
+                  'liquidity_field': liquidity_field
                   }
         return params
+
+    def _get_match_recs(self):
+        match_recs = self.env['account.move.line']
+        params = self._get_auto_reconcile_params()
+        for sql_query in self._get_auto_reconcile_queries(params):
+            self.env.cr.execute(sql_query, params)
+            match_recs = self.env.cr.dictfetchall()
+            if len(match_recs) == 1:
+                break
+        if len(match_recs) != 1:
+            return False
+        return self.env['account.move.line'].browse(
+            [aml.get('id') for aml in match_recs])
 
     @api.multi
     def auto_reconcile(self):
@@ -100,18 +148,10 @@ class AccountBankStatementLine(models.Model):
             return super(AccountBankStatementLine, self).auto_reconcile()
 
         self.ensure_one()
-        match_recs = self.env['account.move.line']
-        params = self._get_auto_reconcile_params()
-        for sql_query in self._get_auto_reconcile_queries():
-            self.env.cr.execute(sql_query, params)
-            match_recs = self.env.cr.dictfetchall()
-            if len(match_recs) == 1:
-                break
-        if len(match_recs) != 1:
-            return False
 
-        match_recs = self.env['account.move.line'].browse(
-            [aml.get('id') for aml in match_recs])
+        match_recs = self._get_match_recs()
+        if not match_recs:
+            return False
         # Now reconcile
         counterpart_aml_dicts = []
         payment_aml_rec = self.env['account.move.line']
