@@ -36,6 +36,13 @@ class ReconciliationPropositionTestCase(TransactionCase):
     def setUp(self):
         super(ReconciliationPropositionTestCase, self).setUp()
 
+        # Install a Chart Of Accounts, don't care which
+        # TODO: fix
+        coa_module = self.env['ir.module.module'].search([('name', '=', 'l10n_be')], limit=1)
+        coa_module.button_immediate_install()
+        coa_template = self.env['account.chart.template'].search([], limit=1)
+        coa_template.try_loading_for_current_company()
+
         self.company = self.env['res.company'].search([], limit=1)
         self.assertTrue(self.company)
         # the method also matches by user's company, so we must make sure the correct one is linked to it
@@ -137,5 +144,3 @@ class ReconciliationPropositionTestCase(TransactionCase):
             self.assertEqual(res.name, expected_aml_name,
                              msg="Test #{}: Unexpected return value. Returned {}, should be {}."
                              .format(i, res.name, expected_aml_name))
-
-

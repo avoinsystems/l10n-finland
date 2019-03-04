@@ -30,7 +30,6 @@
     'application': False,
     'installable': True,
     'depends': [
-        'l10n_fi',
         'l10n_fi_payment_reference',
     ],
     'data': [

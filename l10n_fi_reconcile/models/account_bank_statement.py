@@ -39,7 +39,7 @@ class AccountBankStatementLine(models.Model):
             return sql_queries
 
         if match_amount:
-            amount_sql = "AND ({amount}  = %(amount)s " \
+            amount_sql = "AND ({amount} = %(amount)s " \
                          "OR (acc.internal_type = 'liquidity' " \
                          "AND {liquidity} = %(amount)s)) " \
                 .format(
@@ -48,57 +48,24 @@ class AccountBankStatementLine(models.Model):
         else:
             amount_sql = ''
 
-        # Look for structured communication match
-        sql_queries.append(
-            self._get_common_sql_query() +
-            " AND (aml.ref = %(ref)s OR aml.payment_reference = %(ref)s) "
+        specific_query = \
+            " AND (LTRIM(aml.payment_reference, '0') = LTRIM(%(ref)s, '0') " \
+            "OR LTRIM(aml.ref, '0') = LTRIM(%(ref)s, '0')) " \
             "{amount_sql} ORDER BY date_maturity asc, aml.id asc".format(
                 amount_sql=amount_sql)
-        )
+
+        # Look for structured communication match
+        sql_queries.append(
+            self._get_common_sql_query() + specific_query)
 
         # Look for structured communication match, overlook partner
         sql_queries.append(
             self._get_common_sql_query(overlook_partner=True) +
-            " AND (aml.ref = %(ref)s OR aml.payment_reference = %(ref)s) "
-            "{amount_sql} ORDER BY date_maturity asc, aml.id asc".format(
-                amount_sql=amount_sql)
-        )
-
-        if not params['ref_pattern']:
-            return sql_queries
-
-        # The payment reference on invoice may contain different number
-        # of leading zeros. Use pattern matching.
-        
-        # Look for structured communication match, padded ref
-        sql_queries.append(
-            self._get_common_sql_query() +
-            " AND (aml.ref SIMILAR TO %(ref_pattern)s "
-            "OR aml.payment_reference SIMILAR TO %(ref_pattern)s) "
-            "{amount_sql} ORDER BY date_maturity asc, aml.id asc".format(
-                amount_sql=amount_sql)
-        )
-
-        # Look for structured communication match, padded ref, overlook partner
-        sql_queries.append(
-            self._get_common_sql_query(overlook_partner=True) +
-            " AND (aml.ref SIMILAR TO %(ref_pattern)s "
-            "OR aml.payment_reference SIMILAR TO %(ref_pattern)s) "
-            "{amount_sql} ORDER BY date_maturity asc, aml.id asc".format(
-                amount_sql=amount_sql)
-        )
+            specific_query)
 
         return sql_queries
 
     def _get_auto_reconcile_params(self):
-        
-        def get_ref_pattern(ref):
-            # The payment reference on invoice may contain different number
-            # of leading zeros. Use pattern matching.
-            if ref and ref.startswith('0'):
-                return '0*' + ref.lstrip('0')
-            return False
-        
         amount = self.amount_currency or self.amount
         company_currency = self.journal_id.company_id.currency_id
         st_line_currency = self.currency_id or self.journal_id.currency_id
@@ -117,7 +84,6 @@ class AccountBankStatementLine(models.Model):
                   'amount': float_round(amount, precision_digits=precision),
                   'partner_id': self.partner_id.id,
                   'ref': self.ref or self.name,
-                  'ref_pattern': get_ref_pattern(self.ref),
                   'currency': currency,
                   'amount_field': amount_field,
                   'liquidity_field': liquidity_field
