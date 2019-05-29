@@ -103,6 +103,14 @@ class AccountBankStatementLine(models.Model):
         return self.env['account.move.line'].browse(
             [aml.get('id') for aml in match_recs])
 
+    def _get_auto_reconcile_new_aml_dicts(self, match_recs):
+        """
+        It is some times necessary to create new account.move.line(s) when
+        auto reconciling complex situations, e.g. cash discounts.
+        This stub method may be extended to handle those situations.
+        """
+        return None
+
     @api.multi
     def auto_reconcile(self):
         """
@@ -138,7 +146,9 @@ class AccountBankStatementLine(models.Model):
             with self._cr.savepoint():
                 counterpart = self.process_reconciliation(
                     counterpart_aml_dicts=counterpart_aml_dicts,
-                    payment_aml_rec=payment_aml_rec)
+                    payment_aml_rec=payment_aml_rec,
+                    new_aml_dicts=self._get_auto_reconcile_new_aml_dicts(
+                        match_recs))
             return counterpart
         except UserError:
             # A configuration / business logic error that makes it impossible
