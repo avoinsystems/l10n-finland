@@ -83,7 +83,7 @@ class AccountBankStatementLine(models.Model):
                       self.journal_id.default_debit_account_id.id),
                   'amount': float_round(amount, precision_digits=precision),
                   'partner_id': self.partner_id.id,
-                  'ref': self.ref or self.name,
+                  'ref': self.ref,
                   'currency': currency,
                   'amount_field': amount_field,
                   'liquidity_field': liquidity_field
