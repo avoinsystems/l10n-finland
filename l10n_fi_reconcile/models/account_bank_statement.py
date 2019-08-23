@@ -125,7 +125,7 @@ class AccountBankStatementLine(models.Model):
 
         match_recs = self._get_match_recs()
         if not match_recs:
-            _logger.debug('No reconciliation match found for %s' % self)
+            _logger.info('No reconciliation match found for %s' % self)
             return False
         # Now reconcile
         counterpart_aml_dicts = []
@@ -150,7 +150,7 @@ class AccountBankStatementLine(models.Model):
                     payment_aml_rec=payment_aml_rec,
                     new_aml_dicts=self._get_auto_reconcile_new_aml_dicts(
                         match_recs))
-                _logger.debug('Reconciled %s with %s' % (self, counterpart))
+                _logger.info('Reconciled %s with %s' % (self, counterpart))
             return counterpart
         except UserError:
             # A configuration / business logic error that makes it impossible
@@ -159,7 +159,7 @@ class AccountBankStatementLine(models.Model):
             # exception when manually reconciling. Other types of exception
             # are (hopefully) programmation errors and should cause a
             # stacktrace.
-            _logger.debug('Reconciliation failed for %s' % self)
+            _logger.info('Reconciliation failed for %s' % self)
             self.invalidate_cache()
             self.env['account.move'].invalidate_cache()
             self.env['account.move.line'].invalidate_cache()
