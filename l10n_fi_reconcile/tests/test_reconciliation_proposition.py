@@ -28,20 +28,25 @@ ACCOUNT_MOVE_LINES = [
 BANK_STATEMENT_LINES = [
     {'reference': REFERENCE_ONE_WITH_ZEROS,     'amount': AMOUNT1, 'expected_match': 'perfect_match1'},
     {'reference': REFERENCE_ONE_WITHOUT_ZEROS,  'amount': AMOUNT2, 'expected_match': 'perfect_match2'},
-    {'reference': REFERENCE_TWO_WITH_ZEROS,     'amount': AMOUNT1, 'expected_match': 'partial_match1'},
+    # Last expected match goes to partial 2: both partial 1 and partial 2 are partial matches,
+    # so Odoo will match the one with the higher (i.e. later) ID
+    {'reference': REFERENCE_TWO_WITH_ZEROS,     'amount': AMOUNT1, 'expected_match': 'partial_match2'},
 ]
 
 
 class ReconciliationPropositionTestCase(TransactionCase):
+    # To run this test case, install a chart of account in the same test run
+    # before running tests on this module
+
+    post_install = True
+    at_install = False
+
     def setUp(self):
         super(ReconciliationPropositionTestCase, self).setUp()
 
-        # Install a Chart Of Accounts, don't care which
-        # TODO: fix
-        coa_module = self.env['ir.module.module'].search([('name', '=', 'l10n_be')], limit=1)
-        coa_module.button_immediate_install()
-        coa_template = self.env['account.chart.template'].search([], limit=1)
-        coa_template.try_loading_for_current_company()
+        domain = [('company_id', '=', self.env.ref('base.main_company').id)]
+        if not self.env['account.account'].search_count(domain):
+            self.skipTest("No Chart of account found")
 
         self.company = self.env['res.company'].search([], limit=1)
         self.assertTrue(self.company)
@@ -66,6 +71,12 @@ class ReconciliationPropositionTestCase(TransactionCase):
             'journal_id': self.journal.id,
             'company_id': self.company.id,
             'payment_reference': REFERENCE_ONE_WITH_ZEROS,
+            # Set these to avoid running onchanges that break because running
+            # tests that depend on chart of accounts is shitty shittiness
+            'payment_term_id': False,
+            'fiscal_position_id': False,
+            'partner_bank_id': False,
+            'currency_id': self.env.user.company_id.currency_id.id,
         })
         invoices[REFERENCE_TWO_WITH_ZEROS] = self.env['account.invoice'].create({
             'partner_id': self.partner.id,
@@ -73,6 +84,12 @@ class ReconciliationPropositionTestCase(TransactionCase):
             'journal_id': self.journal.id,
             'company_id': self.company.id,
             'payment_reference': REFERENCE_TWO_WITH_ZEROS,
+            # Set these to avoid running onchanges that break because running
+            # tests that depend on chart of accounts is shitty shittiness
+            'payment_term_id': False,
+            'fiscal_position_id': False,
+            'partner_bank_id': False,
+            'currency_id': self.env.user.company_id.currency_id.id,
         })
 
         self.account_bank_statement_id = self.env['account.bank.statement'].create({
