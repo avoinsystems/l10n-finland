@@ -109,7 +109,8 @@ class AccountBankStatementLine(models.Model):
         auto reconciling complex situations, e.g. cash discounts.
         This stub method may be extended to handle those situations.
         """
-        return None
+        return []
+
 
     @api.multi
     def auto_reconcile(self):
