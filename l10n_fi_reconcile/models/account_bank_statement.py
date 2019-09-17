@@ -23,7 +23,7 @@ import logging
 
 from odoo import api, models
 from odoo.exceptions import UserError
-from odoo.tools import float_round
+from odoo.tools import float_round, float_compare
 
 _logger = logging.getLogger(__name__)
 
@@ -111,6 +111,32 @@ class AccountBankStatementLine(models.Model):
         """
         return []
 
+    def is_valid_finnish_match(self, match_recs, new_aml_dicts):
+        """
+        Check if this is a valid match and can be reconciled. This method is intended to be
+        extended by other modules to add domain specific checks.
+        - Motivation: Finnish auto reconciliation can get much more complex than Odoo standard
+          auto reconciliation, so extra checks are nice to have.
+        - The word "finnish" in the method name comes from the fact that this is part of the
+          Finnish reconciliation package and to make it clear this is not part of standard Odoo.
+        - This base version of the method checks that the monetary balance of the arguments matches
+          with the amount on this line.
+        - This method is called by auto_reconcile method, so extending modules need not worry
+          about calling this, unless they extend/override auto_reconcile too.
+        :param match_recs: a set of account.move.line(s) to be reconciled with self
+        :param new_aml_dicts: a list of dicts from which a set of account.move.lines will be
+        created and reconciled with self
+        :return: True, if validation passes, else False. Note that extending methods should
+        always return False or super()
+        """
+        balance = sum(m.balance for m in match_recs) + \
+                  sum(d['credit'] - d['debit'] for d in new_aml_dicts)
+        prec_ac = self.env['decimal.precision'].precision_get('Account')
+        if float_compare(self.amount, balance, precision_digits=prec_ac) != 0:
+            _logger.debug("Match validation fail: balance mismatch.\n"
+                          "Own balance {}, match balance {}".format(self.amount, balance))
+            return False
+        return True
 
     @api.multi
     def auto_reconcile(self):
@@ -145,12 +171,14 @@ class AccountBankStatementLine(models.Model):
                 })
 
         try:
+            new_aml_dicts = self._get_auto_reconcile_new_aml_dicts(match_recs)
+            if not self.is_valid_finnish_match(match_recs, new_aml_dicts):
+                return False
             with self._cr.savepoint():
                 counterpart = self.process_reconciliation(
                     counterpart_aml_dicts=counterpart_aml_dicts,
                     payment_aml_rec=payment_aml_rec,
-                    new_aml_dicts=self._get_auto_reconcile_new_aml_dicts(
-                        match_recs))
+                    new_aml_dicts=new_aml_dicts)
                 _logger.info('Reconciled %s with %s' % (self, counterpart))
             return counterpart
         except UserError:
