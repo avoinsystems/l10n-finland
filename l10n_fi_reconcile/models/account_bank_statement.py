@@ -21,14 +21,178 @@
 
 import logging
 
-from odoo import models
-from odoo.tools import float_round
+from odoo import api, models
+from odoo.exceptions import UserError
+from odoo.tools import float_round, float_compare
 
 _logger = logging.getLogger(__name__)
 
 
 class AccountBankStatementLine(models.Model):
     _inherit = 'account.bank.statement.line'
+
+    def _get_auto_reconcile_queries(self, params, match_amount=True):
+        sql_queries = list()
+
+        # If no reference is present, return empty list
+        if not params['ref']:
+            return sql_queries
+
+        if match_amount:
+            amount_sql = "AND ({amount} = %(amount)s " \
+                         "OR (acc.internal_type = 'liquidity' " \
+                         "AND {liquidity} = %(amount)s)) " \
+                .format(
+                    amount=params['amount_field'],
+                    liquidity=params['liquidity_field'])
+        else:
+            amount_sql = ''
+
+        specific_query = \
+            " AND (LTRIM(aml.payment_reference, '0') = LTRIM(%(ref)s, '0') " \
+            "OR LTRIM(aml.ref, '0') = LTRIM(%(ref)s, '0')) " \
+            "{amount_sql} ORDER BY date_maturity asc, aml.id asc".format(
+                amount_sql=amount_sql)
+
+        # Look for structured communication match
+        sql_queries.append(
+            self._get_common_sql_query() + specific_query)
+
+        # Look for structured communication match, overlook partner
+        sql_queries.append(
+            self._get_common_sql_query(overlook_partner=True) +
+            specific_query)
+
+        return sql_queries
+
+    def _get_auto_reconcile_params(self):
+        amount = self.amount_currency or self.amount
+        company_currency = self.journal_id.company_id.currency_id
+        st_line_currency = self.currency_id or self.journal_id.currency_id
+        precision = st_line_currency and st_line_currency.decimal_places or \
+                    company_currency.decimal_places
+        currency = (st_line_currency and st_line_currency !=
+                    company_currency) and st_line_currency.id or False
+        amount_field = currency and 'amount_residual_currency' or \
+                       'amount_residual'
+        liquidity_field = currency and 'amount_currency' or \
+                          amount > 0 and 'debit' or 'credit'
+        params = {'company_id': self.env.user.company_id.id,
+                  'account_payable_receivable': (
+                      self.journal_id.default_credit_account_id.id,
+                      self.journal_id.default_debit_account_id.id),
+                  'amount': float_round(amount, precision_digits=precision),
+                  'partner_id': self.partner_id.id,
+                  'ref': self.ref,
+                  'currency': currency,
+                  'amount_field': amount_field,
+                  'liquidity_field': liquidity_field
+                  }
+        return params
+
+    def _get_match_recs(self):
+        match_recs = self.env['account.move.line']
+        params = self._get_auto_reconcile_params()
+        for sql_query in self._get_auto_reconcile_queries(params):
+            self.env.cr.execute(sql_query, params)
+            match_recs = self.env.cr.dictfetchall()
+            if len(match_recs) == 1:
+                break
+        if len(match_recs) != 1:
+            return False
+        return self.env['account.move.line'].browse(
+            [aml.get('id') for aml in match_recs])
+
+    def _get_auto_reconcile_new_aml_dicts(self, match_recs):
+        """
+        It is some times necessary to create new account.move.line(s) when
+        auto reconciling complex situations, e.g. cash discounts.
+        This stub method may be extended to handle those situations.
+        """
+        return []
+
+    def is_valid_finnish_match(self, match_recs, new_aml_dicts):
+        """
+        Check if this is a valid match and can be reconciled. This method is intended to be
+        extended by other modules to add domain specific checks.
+        - Motivation: Finnish auto reconciliation can get much more complex than Odoo standard
+          auto reconciliation, so extra checks are nice to have.
+        - The word "finnish" in the method name comes from the fact that this is part of the
+          Finnish reconciliation package and to make it clear this is not part of standard Odoo.
+        - This base version of the method checks that the monetary balance of the arguments matches
+          with the amount on this line.
+        - This method is called by auto_reconcile method, so extending modules need not worry
+          about calling this, unless they extend/override auto_reconcile too.
+        :param match_recs: a set of account.move.line(s) to be reconciled with self
+        :param new_aml_dicts: a list of dicts from which a set of account.move.lines will be
+        created and reconciled with self
+        :return: True, if validation passes, else False. Note that extending methods should
+        always return False or super()
+        """
+        balance = sum(m.balance for m in match_recs) + \
+                  sum(d['credit'] - d['debit'] for d in new_aml_dicts)
+        prec_ac = self.env['decimal.precision'].precision_get('Account')
+        if float_compare(self.amount, balance, precision_digits=prec_ac) != 0:
+            _logger.debug("Match validation fail: balance mismatch.\n"
+                          "Own balance {}, match balance {}".format(self.amount, balance))
+            return False
+        return True
+
+    @api.multi
+    def auto_reconcile(self):
+        """
+        Try to automatically reconcile the statement.line return the
+        counterpart journal entry/ies if the automatic reconciliation
+        succeeded, False otherwise.
+        """
+        if self.company_id.auto_reconcile_method != 'finnish':
+            return super(AccountBankStatementLine, self).auto_reconcile()
+
+        self.ensure_one()
+
+        match_recs = self._get_match_recs()
+        if not match_recs:
+            _logger.info('No reconciliation match found for %s' % self)
+            return False
+        # Now reconcile
+        counterpart_aml_dicts = []
+        payment_aml_rec = self.env['account.move.line']
+        for aml in match_recs:
+            if aml.account_id.internal_type == 'liquidity':
+                payment_aml_rec = (payment_aml_rec | aml)
+            else:
+                amount = aml.currency_id and aml.amount_residual_currency or \
+                    aml.amount_residual
+                counterpart_aml_dicts.append({
+                    'name': aml.name if aml.name != '/' else aml.move_id.name,
+                    'debit': amount < 0 and -amount or 0,
+                    'credit': amount > 0 and amount or 0,
+                    'move_line': aml
+                })
+
+        try:
+            new_aml_dicts = self._get_auto_reconcile_new_aml_dicts(match_recs)
+            if not self.is_valid_finnish_match(match_recs, new_aml_dicts):
+                return False
+            with self._cr.savepoint():
+                counterpart = self.process_reconciliation(
+                    counterpart_aml_dicts=counterpart_aml_dicts,
+                    payment_aml_rec=payment_aml_rec,
+                    new_aml_dicts=new_aml_dicts)
+                _logger.info('Reconciled %s with %s' % (self, counterpart))
+            return counterpart
+        except UserError:
+            # A configuration / business logic error that makes it impossible
+            # to auto-reconcile should not be raised since automatic
+            # reconciliation is just an amenity and the user will get the same
+            # exception when manually reconciling. Other types of exception
+            # are (hopefully) programmation errors and should cause a
+            # stacktrace.
+            _logger.info('Reconciliation failed for %s' % self)
+            self.invalidate_cache()
+            self.env['account.move'].invalidate_cache()
+            self.env['account.move.line'].invalidate_cache()
+            return False
 
     def get_reconciliation_proposition(self, excluded_ids=None):
 
