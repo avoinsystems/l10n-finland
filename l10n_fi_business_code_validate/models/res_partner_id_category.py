@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2017 Oy Tawasta OS Technologies Ltd.
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
@@ -11,12 +10,11 @@ from odoo.exceptions import ValidationError
 class ResPartnerIdCategory(models.Model):
     _inherit = 'res.partner.id_category'
 
+    # Number-space specific multipliers
+    FINNISH_ID_DIGIT_MULTIPLIERS = [7, 9, 10, 5, 8, 4, 2]
+
     # Business id validator
     def validate_business_id(self, id_number):
-        if not id_number:
-            # Business id is not set. This is fine.
-            return True
-
         partner = id_number.partner_id
 
         if partner.country_id:
@@ -51,10 +49,8 @@ class ResPartnerIdCategory(models.Model):
             raise ValidationError(msg)
 
         # The formal format is ok, check the validation number
-        multipliers = [7, 9, 10, 5, 8, 4,
-                       2]  # Number-space specific multipliers
+        multipliers = self.FINNISH_ID_DIGIT_MULTIPLIERS
         validation_multiplier = 0  # Initial multiplier
-        number_index = 0  # The index of the number we are parsing
 
         # business id without "-" for validation
         business_id_number = re.sub("[^0-9]", "",
@@ -62,10 +58,8 @@ class ResPartnerIdCategory(models.Model):
         validation_bit = business_id_number[7:8]
 
         # Test the validation bit
-        for number in business_id_number[0:7]:
-            validation_multiplier += multipliers[number_index] * int(number)
-            number_index += 1
-
+        for number, multiplier in zip(business_id_number[0:7], multipliers):
+            validation_multiplier += multiplier * int(number)
         modulo = validation_multiplier % 11
 
         # Get the final modulo
@@ -74,15 +68,16 @@ class ResPartnerIdCategory(models.Model):
 
         if int(modulo) != int(validation_bit):
             # The validation bit doesn't match
-            msg = _('Your business id validation number is invalid.')
-            msg += ('Please check the given business id')
+            msg = '%s %s' % (
+                _('Your business id validation number is invalid.'),
+                _('Please check the given business id.'),
+            )
             raise ValidationError(msg)
 
     # Finnish (FI) business id formatter
     def _business_id_update_format_fi(self, partner):
         # Reformat business id from 12345671 to 1234567-1
-        if isinstance(partner.business_id, basestring) \
-                and re.match('^[0-9]{8}$', partner.business_id):
+        if partner.business_id and re.match('^[0-9]{8}$', partner.business_id):
 
             partner.business_id = \
                 partner.business_id[:7] + '-' + partner.business_id[7:]

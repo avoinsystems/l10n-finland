@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ##############################################################################
 #
 #    Author: Oy Tawasta OS Technologies Ltd.
@@ -20,13 +19,13 @@
 {
     "name": "Partner business code validate",
     "summary": "Adds validation for partner_business_code",
-    "version": "11.0.1.2.3",
+    "version": "11.0.1.0.0",
     "category": "CRM",
     "website": "https://odoo-community.org/",
     "author": "Oy Tawasta Technologies Ltd., Odoo Community Association (OCA)",
     "license": "AGPL-3",
     "application": False,
-    "installable": False,
+    "installable": True,
     "external_dependencies": {
         "python": [],
         "bin": [],
