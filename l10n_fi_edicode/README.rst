@@ -29,7 +29,7 @@ Bug Tracker
 ===========
 
 Bugs are tracked on `GitHub Issues
-<https://github.com/OCA/partner-contact/issues>`_. In case of trouble, please
+<https://github.com/OCA/l10n-finland/issues>`_. In case of trouble, please
 check there if your issue has already been reported. If you spotted it first,
 help us smash it by providing detailed and welcomed feedback.
 
@@ -46,6 +46,7 @@ Contributors
 
 * Jarmo Kortetjärvi <jarmo.kortetjarvi@tawasta.fi>
 * Timo Talvitie <timo.talvitie@vizucom.com>
+* Tatiana Deribina <tatiana.deribina@avoin.systems>
 
 
 Maintainer
