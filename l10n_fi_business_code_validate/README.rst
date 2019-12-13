@@ -9,9 +9,7 @@ Partner business code validate
 Adds a business code validation and format checks for business id
 
 Supported countries:
-
 - Finland
-   - https://www.vero.fi/contentassets/38c6e70f10b342cdba4716e904c3edbf/tarkistusmerkin-laskenta.pdf
 
 
 Installation
@@ -39,7 +37,7 @@ Bug Tracker
 ===========
 
 Bugs are tracked on `GitHub Issues
-<https://github.com/OCA/l10n-finland/issues>`_. In case of trouble, please
+<https://github.com/OCA/partner-contact/issues>`_. In case of trouble, please
 check there if your issue has already been reported. If you spotted it first,
 help us smash it by providing detailed and welcomed feedback.
 

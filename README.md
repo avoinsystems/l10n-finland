@@ -6,7 +6,8 @@ Finnish localisation
 
 ...
 
-
+[//]: # (addons)
+[//]: # (end addons)
 
 Translation Status
 ------------------
