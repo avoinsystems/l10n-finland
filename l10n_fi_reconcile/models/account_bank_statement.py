@@ -66,6 +66,14 @@ class AccountBankStatementLine(models.Model):
         return sql_queries
 
     def _get_auto_reconcile_params(self):
+        # Produce parameters for SQL query
+        #
+        # Note: Odoo's float_round method contains floating point arithmetic that can produce incorrect results
+        # due to the limitations of float data type; e.g. 80.60 is 'rounded' to 80.60000000000001.
+        # (float_round does a final, un-rounded multiplication at the end)
+        # Re-rounding the result with Python's round method rectifies the issue.
+        # Call to float_round is needed to get the desired half-up rounding.
+        # Rounding needs to be precise because the resulting values are passed as-is to Postgresql.
         amount = self.amount_currency or self.amount
         company_currency = self.journal_id.company_id.currency_id
         st_line_currency = self.currency_id or self.journal_id.currency_id
@@ -81,7 +89,7 @@ class AccountBankStatementLine(models.Model):
                   'account_payable_receivable': (
                       self.journal_id.default_credit_account_id.id,
                       self.journal_id.default_debit_account_id.id),
-                  'amount': float_round(amount, precision_digits=precision),
+                  'amount': round(float_round(amount, precision_digits=precision), precision),
                   'partner_id': self.partner_id.id,
                   'ref': self.ref,
                   'currency': currency,
@@ -209,11 +217,12 @@ class AccountBankStatementLine(models.Model):
         field = currency and 'amount_residual_currency' or 'amount_residual'
         liquidity_field = currency and 'amount_currency' or amount > 0 and 'debit' or 'credit'
         liquidity_amt_clause = currency and '%(amount)s::numeric' or 'abs(%(amount)s::numeric)'
+        # See comment in _get_auto_reconcile_params for explanation of usage of round and float_round.
         params = {'company_id': self.env.user.company_id.id,
                   'account_payable_receivable': (
                       self.journal_id.default_credit_account_id.id,
                       self.journal_id.default_debit_account_id.id),
-                  'amount': float_round(amount, precision_digits=precision),
+                  'amount': round(float_round(amount, precision_digits=precision), precision),
                   'partner_id': self.partner_id.id,
                   'excluded_ids': tuple(excluded_ids),
                   'ref': self.ref,
