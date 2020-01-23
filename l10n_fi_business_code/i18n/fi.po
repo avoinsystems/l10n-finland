@@ -4,11 +4,11 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 10.0\n"
+"Project-Id-Version: Odoo Server 13.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-16 20:07+0000\n"
-"PO-Revision-Date: 2018-03-16 22:07+0200\n"
-"Last-Translator: <>\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 2020-01-23 20:26+0200\n"
+"Last-Translator: Miku Laitinen <miku@avoin.systems>\n"
 "Language-Team: \n"
 "Language: fi\n"
 "MIME-Version: 1.0\n"
@@ -28,7 +28,7 @@ msgstr "Y-tunnus"
 #. module: l10n_fi_business_code
 #: model:ir.model,name:l10n_fi_business_code.model_res_partner
 msgid "Contact"
-msgstr ""
+msgstr "Kontakti"
 
 #~ msgid "Partner"
 #~ msgstr "Kumppani"
