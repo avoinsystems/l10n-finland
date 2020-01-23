@@ -2,7 +2,7 @@ import unittest
 from odoo.tests import tagged
 from odoo.exceptions import UserError
 # noinspection PyUnresolvedReferences
-from ..models.account_invoice \
+from ..models.account_move \
     import compute_payment_reference_fi, compute_payment_reference_rf
 
 

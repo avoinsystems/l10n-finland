@@ -3,10 +3,10 @@ from odoo.tests import tagged
 
 
 @tagged('standard', 'at_install')
-class InvoiceValidateTest(TransactionCase):
+class MovePostTest(TransactionCase):
 
     def setUp(self):
-        super(InvoiceValidateTest, self).setUp()
+        super(MovePostTest, self).setUp()
         partner_id = self.env.ref('base.res_partner_1')
         self.company = self.env.ref('base.main_company')
         self.company.write({'payment_reference_type': 'fi'})

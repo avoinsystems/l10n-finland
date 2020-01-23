@@ -4,7 +4,7 @@
 {
     "name": "Finnish Sales Invoice Payment Reference",
     "summary": "Generate a valid invoice payment reference for sales invoices",
-    "version": "12.0.1.0.0",
+    "version": "13.0.1.0.0",
     "category": "Localization",
     "website": "https://github.com/OCA/l10n-finland",
     "author": "Avoin.Systems, Odoo Community Association (OCA)",
@@ -14,7 +14,7 @@
     ],
     "installable": True,
     "data": [
-        "views/account_invoice.xml",
+        "views/account_move.xml",
         "views/res_config.xml",
     ]
 }
