@@ -1,1 +1,1 @@
-The module allows users to generate a valid invoice payment reference for sales invoices.
+This module adds 2 additional Payment Reference models - Finnish Standard Reference and Finnish Creditor Reference (RF).

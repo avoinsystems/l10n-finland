@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 13.0+e-20191218\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-09-19 11:46+0000\n"
-"PO-Revision-Date: 2018-09-19 14:50+0300\n"
+"POT-Creation-Date: 2020-01-24 09:44+0000\n"
+"PO-Revision-Date: 2020-01-24 09:44+0000\n"
 "Last-Translator: Miku Laitinen <miku@avoin.systems>\n"
 "Language-Team: \n"
 "Language: fi\n"
@@ -17,80 +17,40 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 2.0.6\n"
 
-#. module: l10n_fi_payment_reference
-#: model_terms:ir.ui.view,arch_db:l10n_fi_payment_reference.view_account_config_settings_finnish
-msgid ""
-"<span class=\"fa fa-lg fa-building-o\" title=\"Values set here are company-"
-"specific.\" groups=\"base.group_multi_company\"/>"
+#. module: l10n_fi_payment_reference_new
+#: model:ir.model.fields,field_description:l10n_fi_payment_reference_new.field_account_journal__invoice_reference_model
+msgid "Communication Standard"
 msgstr ""
 
-#. module: l10n_fi_payment_reference
-#: model_terms:ir.ui.view,arch_db:l10n_fi_payment_reference.view_account_config_settings_finnish
-msgid "Choose the type of payment reference used on customer invoices"
-msgstr "Valitse myyntilaskuilla käytettävä maksuviitetyyppi"
-
-#. module: l10n_fi_payment_reference
-#: model:ir.model,name:l10n_fi_payment_reference.model_res_company
-msgid "Companies"
-msgstr "Yritykset"
-
-#. module: l10n_fi_payment_reference
-#: model:ir.model,name:l10n_fi_payment_reference.model_res_config_settings
-msgid "Config Settings"
-msgstr ""
-
-#. module: l10n_fi_payment_reference
-#: model:ir.model.fields.selection,name:l10n_fi_payment_reference.selection__res_company__payment_reference_type__rf
-msgid "Creditor Reference (RF)"
+#. module: l10n_fi_payment_reference_new
+#: model:ir.model.fields.selection,name:l10n_fi_payment_reference_new.selection__account_journal__invoice_reference_model__finnish_rf
+msgid "Finnish Creditor Reference (RF)"
 msgstr "Kansainvälinen RF-viite"
 
-#. module: l10n_fi_payment_reference
-#: model:ir.model.fields.selection,name:l10n_fi_payment_reference.selection__res_company__payment_reference_type__fi
+#. module: l10n_fi_payment_reference_new
+#: model:ir.model.fields.selection,name:l10n_fi_payment_reference_new.selection__account_journal__invoice_reference_model__finnish
 msgid "Finnish Standard Reference"
 msgstr "Suomalainen maksuviite"
 
-#. module: l10n_fi_payment_reference
-#: model:ir.model.fields.selection,name:l10n_fi_payment_reference.selection__res_company__payment_reference_type__none
-msgid "Free Reference"
-msgstr "Vapaa viite"
-
-#. module: l10n_fi_payment_reference
-#: code:addons/l10n_fi_payment_reference/models/account_move.py:0
+#. module: l10n_fi_payment_reference_new
+#: code:addons/l10n_fi_payment_reference_new/models/account_move.py:0
 #, python-format
 msgid "Invoice number must contain numeric characters"
 msgstr "Laskun numeron on sisällettävä numeerisia merkkejä"
 
-#. module: l10n_fi_payment_reference
-#: model:ir.model,name:l10n_fi_payment_reference.model_account_move
+#. module: l10n_fi_payment_reference_new
+#: model:ir.model,name:l10n_fi_payment_reference_new.model_account_journal
+msgid "Journal"
+msgstr ""
+
+#. module: l10n_fi_payment_reference_new
+#: model:ir.model,name:l10n_fi_payment_reference_new.model_account_move
 msgid "Journal Entries"
 msgstr ""
 
-#. module: l10n_fi_payment_reference
-#: model_terms:ir.ui.view,arch_db:l10n_fi_payment_reference.view_account_config_settings_finnish
-msgid "Payment Reference"
-msgstr "Maksuviite"
-
-#. module: l10n_fi_payment_reference
-#: model:ir.model.fields,field_description:l10n_fi_payment_reference.field_account_move__payment_reference
-msgid "Payment Reference Number"
-msgstr "Maksuviite"
-
-#. module: l10n_fi_payment_reference
-#: model:ir.model.fields,field_description:l10n_fi_payment_reference.field_account_move__payment_reference_type
-#: model:ir.model.fields,field_description:l10n_fi_payment_reference.field_res_company__payment_reference_type
-#: model:ir.model.fields,field_description:l10n_fi_payment_reference.field_res_config_settings__payment_reference_type
-msgid "Payment Reference Type"
-msgstr "Maksuviitteen tyyppi"
-
-#. module: l10n_fi_payment_reference
-#: code:addons/l10n_fi_payment_reference/models/account_move.py:0
-#, python-format
-msgid "Payment reference type {} doesn't have a compute method"
+#. module: l10n_fi_payment_reference_new
+#: model:ir.model.fields,help:l10n_fi_payment_reference_new.field_account_journal__invoice_reference_model
+msgid ""
+"You can choose different models for each type of reference. The default one "
+"is the Odoo reference."
 msgstr ""
-
-#. module: l10n_fi_payment_reference
-#: model:ir.model.fields,help:l10n_fi_payment_reference.field_account_move__payment_reference_type
-#: model:ir.model.fields,help:l10n_fi_payment_reference.field_res_company__payment_reference_type
-#: model:ir.model.fields,help:l10n_fi_payment_reference.field_res_config_settings__payment_reference_type
-msgid "The default payment reference for sales invoices"
-msgstr "Oletusmaksuviite myyntilaskuille"

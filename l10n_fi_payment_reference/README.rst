@@ -66,6 +66,7 @@ Contributors
 - Miku Laitinen (Avoin.Systems)
 - Mikko Närjänen (Avoin.Systems)
 - Oskars Zālītis (Avoin.Systems)
+- Daniels Andersons (Avoin.Systems)
 
 Maintainers
 ~~~~~~~~~~~

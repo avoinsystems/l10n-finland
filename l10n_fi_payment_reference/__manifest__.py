@@ -14,7 +14,5 @@
     ],
     "installable": True,
     "data": [
-        "views/account_move.xml",
-        "views/res_config.xml",
     ]
 }
