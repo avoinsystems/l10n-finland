@@ -3,7 +3,7 @@ from odoo.tests import tagged
 from odoo.exceptions import UserError
 # noinspection PyUnresolvedReferences
 from ..models.account_move \
-    import compute_payment_reference_fi, compute_payment_reference_rf
+    import compute_payment_reference_finnish, compute_payment_reference_finnish_rf
 
 
 @tagged('standard', 'at_install')
@@ -16,7 +16,7 @@ class PaymentReferenceTest(unittest.TestCase):
 
     def test_payment_reference_fi(self):
 
-        compute = compute_payment_reference_fi
+        compute = compute_payment_reference_finnish
 
         # Common
         self.assertEqual('1232', compute('INV123'))
@@ -43,7 +43,7 @@ class PaymentReferenceTest(unittest.TestCase):
 
     def test_payment_reference_rf(self):
 
-        compute = compute_payment_reference_rf
+        compute = compute_payment_reference_finnish_rf
 
         # Common
         self.assertEqual('RF111232', compute('INV123'))

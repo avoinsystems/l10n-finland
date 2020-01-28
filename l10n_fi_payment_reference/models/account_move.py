@@ -1,6 +1,6 @@
-# Copyright (C) Avoin.Systems 2018
+# Copyright (C) Avoin.Systems 2019
 import re
-from odoo import api, fields, models, _
+from odoo import models, _
 from odoo.exceptions import UserError
 import logging
 
@@ -50,7 +50,7 @@ def get_rf_check_digits(base_number):
              check_base])) % 97))])[-2:]
 
 
-def compute_payment_reference_fi(number):
+def compute_payment_reference_finnish(number):
     # Drop all non-numeric characters
     invoice_number = number2numeric(number)
 
@@ -60,7 +60,7 @@ def compute_payment_reference_fi(number):
     return invoice_number + check_digit
 
 
-def compute_payment_reference_rf(number):
+def compute_payment_reference_finnish_rf(number):
     # Drop all non-numeric characters
     invoice_number = number2numeric(number)
 
@@ -76,43 +76,18 @@ def compute_payment_reference_rf(number):
 class AccountInvoiceFinnish(models.Model):
     _inherit = 'account.move'
 
-    # noinspection PyMethodMayBeStatic
-    def _compute_payment_reference_rf(self, invoice_number):
-        return compute_payment_reference_rf(invoice_number)
+    def _get_invoice_reference_finnish_rf_invoice(self):
+        self.ensure_one()
+        return compute_payment_reference_finnish_rf(self.name)
 
-    # noinspection PyMethodMayBeStatic
-    def _compute_payment_reference_fi(self, invoice_number):
-        return compute_payment_reference_fi(invoice_number)
+    def _get_invoice_reference_finnish_rf_partner(self):
+        self.ensure_one()
+        return compute_payment_reference_finnish_rf(str(self.partner_id.id))
 
-    def _compute_payment_reference(self):
-        for invoice in self:
-            ref_type = invoice.payment_reference_type
-            if invoice.payment_reference or not ref_type or ref_type == 'none':
-                continue
+    def _get_invoice_reference_finnish_invoice(self):
+        self.ensure_one()
+        return compute_payment_reference_finnish(self.name)
 
-            if invoice.name:
-                method_name = '_compute_payment_reference_' + ref_type
-                if not hasattr(invoice, method_name):
-                    raise NotImplementedError(
-                        _("Payment reference type {} doesn't have "
-                          "a compute method").format(ref_type))
-
-                self.payment_reference = \
-                    getattr(invoice, method_name)(invoice.name)
-
-    payment_reference = fields.Char(
-        'Payment Reference Number',
-        copy=False,
-    )
-
-    payment_reference_type = fields.Selection(
-        related='company_id.payment_reference_type',
-        readonly=True,
-    )
-
-    def post(self):
-        super(AccountInvoiceFinnish, self).post()
-        # noinspection PyProtectedMember
-        self.filtered(lambda i: i.payment_reference_type != 'none' and
-                      i.type == 'out_invoice') \
-            ._compute_payment_reference()
+    def _get_invoice_reference_finnish_partner(self):
+        self.ensure_one()
+        return compute_payment_reference_finnish(str(self.partner_id.id))
