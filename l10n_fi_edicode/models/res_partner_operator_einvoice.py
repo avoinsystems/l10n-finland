@@ -7,17 +7,10 @@ class ResPartnerOperatorEinvoice(models.Model):
     _description = "eInvoice Operator"
     _order = "sequence, id"
 
-    name = fields.Char(
-        string="Operator",
-        required=True,
-    )
-    active = fields.Boolean(
-        string="Active",
-        default=True,
-    )
-    sequence = fields.Integer(
-        "Sequence",
-    )
+
+    name = fields.Char(string="Operator", required=True)
+    active = fields.Boolean(string="Active", default=True)
+    sequence = fields.Integer("Sequence")
     identifier = fields.Char(
         string="Identifier",
         required=True,

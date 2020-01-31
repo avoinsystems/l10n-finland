@@ -19,7 +19,7 @@
 {
     "name": "Partner EDI code",
     "summary": "Adds EDI code field and operators",
-    "version": "13.0.1.0.0",
+    "version": "13.0.1.1.0",
     "category": "Accounting",
     "website": "https://odoo-community.org/",
     "author": (
@@ -27,7 +27,7 @@
         ", Odoo Community Association (OCA)"
         ", Avoin.Systems"
     ),
-    "license": "AGPL-3",
+    "license": "LGPL-3",
     "application": False,
     "installable": True,
     "external_dependencies": {"python": [], "bin": []},

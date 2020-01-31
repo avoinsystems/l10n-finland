@@ -8,5 +8,5 @@ class ResPartner(models.Model):
     einvoice_operator_id = fields.Many2one(
         comodel_name="res.partner.operator.einvoice",
         string="eInvoice Operator",
-        old_name="einvoice_operator",
+        help="Provider for eInvoice documents",
     )
