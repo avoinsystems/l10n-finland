@@ -1,9 +1,9 @@
-from odoo.addons.account.tests.invoice_test_common import InvoiceTestCommon
+from odoo.addons.account.tests.account_test_savepoint import AccountTestInvoicingCommon
 from odoo.tests import tagged
 
 
 @tagged('post_install', '-at_install')
-class InvoiceGetReferenceTest(InvoiceTestCommon):
+class InvoiceGetReferenceTest(AccountTestInvoicingCommon):
 
     @classmethod
     def setUpClass(cls):
