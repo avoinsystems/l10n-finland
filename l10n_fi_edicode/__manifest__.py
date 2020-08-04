@@ -19,7 +19,7 @@
 {
     "name": "Partner EDI code",
     "summary": "Adds EDI code field and operators",
-    "version": "13.0.1.1.0",
+    "version": "13.0.1.1.1",
     "category": "Accounting",
     "website": "https://odoo-community.org/",
     "author": (
