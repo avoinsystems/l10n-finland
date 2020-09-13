@@ -10,3 +10,7 @@ class ResPartner(models.Model):
         string="eInvoice Operator",
         help="Provider for eInvoice documents",
     )
+
+    def _commercial_fields(self):
+        return super(ResPartner, self)._commercial_fields() \
+               + ['edicode', 'einvoice_operator_id']
