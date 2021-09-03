@@ -23,7 +23,9 @@ Finnish Sales Invoice Payment Reference
     :target: https://runbot.odoo-community.org/runbot/178/11.0
     :alt: Try me on Runbot
 
-|badge1| |badge2| |badge3| |badge4| |badge5| 
+|badge1| |badge2| |badge3| |badge4| |badge5|
+
+DEPRECATED You should uninstall this module. Uninstall hooks will ensure settings are migrated to use l10n_fi if available.
 
 The module allows users to generate a valid invoice payment reference for sales invoices.
 
